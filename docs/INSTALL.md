@@ -28,7 +28,18 @@ python hub.py
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-脚本做四件事：复制 `hub/` 到 `%LOCALAPPDATA%\AppDock\`、生成 `apps.json`、检查 Python、打印下一步。
+脚本做四件事：把 `hub\`（含 `examples\`、`plugin\`）按仓库原样复制到 `%LOCALAPPDATA%\AppDock\`、
+在 `hub\apps.json` 生成清单、检查 Python、打印下一步。
+
+安装后目录结构与仓库一致 —— 这是有意的：清单里的 `{HERE}` 指 hub 目录，示例条目用
+`{HERE}\..\examples\site`，把 `hub.py` 拍平到 `%LOCALAPPDATA%\AppDock\` 根下会让示例条目
+起不来（`WinError 267`）。
+
+```powershell
+cd "$env:LOCALAPPDATA\AppDock\hub"
+python hub.py
+```
+
 **不会**改注册表、**不会**装服务、**不会**开机自启 —— 除非你显式加 `-Autostart`。
 
 ```powershell
@@ -52,7 +63,7 @@ python hub.py
 | 方式 | 命令 | 说明 |
 |---|---|---|
 | 登录自启（推荐） | `.\install.ps1 -Autostart` | 用户级 `HKCU\…\Run`，免管理员，不动系统 |
-| 手动后台 | `Start-Process pythonw -ArgumentList "hub.py" -WindowStyle Hidden` | 用 `pythonw` 才没有黑窗 |
+| 手动后台 | `Start-Process pythonw -ArgumentList "$env:LOCALAPPDATA\AppDock\hub\hub.py" -WindowStyle Hidden` | 用 `pythonw` 才没有黑窗 |
 | 托盘常驻 | 自己套 NSSM / WinSW | 需要装第三方，按需 |
 
 ---

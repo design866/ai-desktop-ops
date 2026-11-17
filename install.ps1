@@ -1,11 +1,16 @@
 # App Dock - Windows installer
 #
-#   .\install.ps1                 copy hub to %LOCALAPPDATA%\AppDock, create apps.json, check python
+#   .\install.ps1                 copy hub\ + examples\ to %LOCALAPPDATA%\AppDock, create hub\apps.json, check python
 #   .\install.ps1 -Autostart      also register hub at logon (HKCU\...\Run, no admin needed)
 #   .\install.ps1 -Uninstall      remove the autostart entry (files are kept)
 #
 # It never installs a service, never touches machine-wide settings, never enables
 # autostart unless you ask for it with -Autostart.
+#
+# The repo layout is preserved under $Target on purpose: apps.json entries use
+# {HERE} (= the hub directory) and the bundled example points at
+# {HERE}\..\examples\site, so flattening hub.py straight into $Target breaks it
+# (that example then fails to start with WinError 267).
 
 [CmdletBinding()]
 param(
@@ -49,40 +54,50 @@ if (-not $py) {
 }
 Write-Host "  [ok] python: $py ($ver)"
 
-# --- 2. copy hub -----------------------------------------------------------
+# --- 2. copy hub + examples (repo layout kept) ------------------------------
 if (-not (Test-Path "$PSScriptRoot\hub\hub.py")) {
     Write-Error "run this script from the repo root (hub\hub.py not found)"
     exit 1
 }
-New-Item -ItemType Directory -Force -Path $Target | Out-Null
-Copy-Item "$PSScriptRoot\hub\hub.py"           "$Target\hub.py"           -Force
-Copy-Item "$PSScriptRoot\hub\index.html"       "$Target\index.html"       -Force
-Copy-Item "$PSScriptRoot\hub\apps.example.json" "$Target\apps.example.json" -Force
-New-Item -ItemType Directory -Force -Path "$Target\logs" | Out-Null
-Write-Host "  [ok] hub copied to $Target"
+New-Item -ItemType Directory -Force -Path "$Target\hub"        | Out-Null
+New-Item -ItemType Directory -Force -Path "$Target\hub\logs"   | Out-Null
+Copy-Item "$PSScriptRoot\hub\hub.py"            "$Target\hub\hub.py"            -Force
+Copy-Item "$PSScriptRoot\hub\index.html"        "$Target\hub\index.html"        -Force
+Copy-Item "$PSScriptRoot\hub\apps.example.json" "$Target\hub\apps.example.json" -Force
+
+if (Test-Path "$PSScriptRoot\examples") {
+    New-Item -ItemType Directory -Force -Path "$Target\examples" | Out-Null
+    Copy-Item "$PSScriptRoot\examples\*" "$Target\examples\" -Recurse -Force
+}
+if (Test-Path "$PSScriptRoot\plugin\plugin.js") {
+    New-Item -ItemType Directory -Force -Path "$Target\plugin" | Out-Null
+    Copy-Item "$PSScriptRoot\plugin\plugin.js" "$Target\plugin\plugin.js" -Force
+}
+Write-Host "  [ok] hub copied to $Target\hub (examples\ and plugin\ alongside)"
 
 # --- 3. apps.json ----------------------------------------------------------
-if (Test-Path "$Target\apps.json") {
-    Write-Host "  [--] apps.json already exists, kept"
+if (Test-Path "$Target\hub\apps.json") {
+    Write-Host "  [--] hub\apps.json already exists, kept"
 } else {
-    Copy-Item "$Target\apps.example.json" "$Target\apps.json"
-    Write-Host "  [ok] apps.json created from the example"
+    Copy-Item "$Target\hub\apps.example.json" "$Target\hub\apps.json"
+    Write-Host "  [ok] hub\apps.json created from the example"
 }
 
 # --- 4. run hint -----------------------------------------------------------
+$hub = Join-Path $Target 'hub'
 Write-Host ""
 Write-Host "Start the hub:"
-Write-Host "    cd `"$Target`"; $py hub.py"
+Write-Host "    cd `"$hub`"; $py hub.py"
 Write-Host "Open the workbench:  http://127.0.0.1:7777"
 Write-Host ""
-Write-Host "Panel (optional): copy plugin\plugin.js into your host's plugin folder,"
+Write-Host "Panel (optional): copy $Target\plugin\plugin.js into your host's plugin folder,"
 Write-Host "then restart the host app. See docs\INSTALL.md."
 
 # --- 5. autostart (opt-in) -------------------------------------------------
 if ($Autostart) {
     $pythonw = Join-Path (Split-Path (Get-Command $py).Source) 'pythonw.exe'
     if (-not (Test-Path $pythonw)) { $pythonw = (Get-Command $py).Source }
-    $cmd = '"' + $pythonw + '" "' + (Join-Path $Target 'hub.py') + '"'
+    $cmd = '"' + $pythonw + '" "' + (Join-Path $hub 'hub.py') + '"'
     New-ItemProperty -Path $RunKey -Name $RunName -Value $cmd -PropertyType String -Force | Out-Null
     Write-Host "  [ok] autostart registered: $cmd"
 }
