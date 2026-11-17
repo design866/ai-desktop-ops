@@ -1,0 +1,55 @@
+{
+  "apps": [
+    {
+      "id": "design-studio",
+      "name": "Design Studio",
+      "sub": "浏览器里跑的本地设计工具",
+      "kind": "web",
+      "group": "内嵌应用",
+      "port": 7480,
+      "cwd": "{HERE}/../examples/site",
+      "cmd": "{PY} -m http.server {port} --bind 127.0.0.1",
+      "hotkey": "1"
+    },
+    {
+      "id": "agent-console",
+      "name": "Agent Console",
+      "sub": "本地智能体控制台",
+      "kind": "web",
+      "group": "内嵌应用",
+      "port": 7481,
+      "cwd": "{HERE}/../examples/site",
+      "cmd": "{PY} -m http.server {port} --bind 127.0.0.1",
+      "hotkey": "2"
+    },
+    {
+      "id": "image-playground",
+      "name": "Image Playground",
+      "sub": "本地出图服务",
+      "kind": "web",
+      "group": "内嵌应用",
+      "port": 7482,
+      "cwd": "{HERE}/../examples/site",
+      "cmd": "{PY} -m http.server {port} --bind 127.0.0.1",
+      "hotkey": "3"
+    },
+    {
+      "id": "note-app",
+      "name": "Note App",
+      "sub": "独立窗口应用",
+      "kind": "native",
+      "group": "独立窗口",
+      "exe": "{LOCALAPPDATA}\\Programs\\NoteApp\\NoteApp.exe",
+      "hotkey": "n"
+    },
+    {
+      "id": "code-editor",
+      "name": "Code Editor",
+      "sub": "独立窗口应用",
+      "kind": "native",
+      "group": "独立窗口",
+      "exe": "C:\\Program Files\\CodeEditor\\CodeEditor.exe",
+      "hotkey": "e"
+    }
+  ]
+}

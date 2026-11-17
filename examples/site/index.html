@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Your app renders here</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background:#0f1115;color:#e8e9ec;
+    font:14px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  .card{max-width:520px;padding:0 32px}
+  h1{margin:0 0 6px;font-size:19px;letter-spacing:.2px}
+  p{margin:0 0 14px;color:#9aa0ab}
+  code{background:#1b1f27;border:1px solid #262b35;border-radius:5px;padding:1px 5px;font-size:12.5px}
+  ol{margin:0;padding-left:20px;color:#9aa0ab}
+  li{margin:5px 0}
+  .tag{display:inline-block;margin-bottom:16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5f6672}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="tag">App Dock · placeholder page</div>
+  <h1>Your app renders here</h1>
+  <p>This page is served by the example entries in <code>apps.example.json</code>. Replace each entry's
+  <code>cmd</code> / <code>port</code> with your own local service and this stage becomes that app.</p>
+  <ol>
+    <li>Copy <code>apps.example.json</code> to <code>apps.json</code></li>
+    <li>Point one entry at your service (dev server, notebook, generator UI …)</li>
+    <li>Reload the dock — clicking the entry starts it and embeds it here</li>
+  </ol>
+</div>
+</body>
+</html>

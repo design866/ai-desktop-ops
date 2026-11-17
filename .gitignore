@@ -1,0 +1,23 @@
+# runtime
+hub/apps.json
+logs/
+*.log
+
+# secrets — never commit
+.env
+.env.*
+*.key
+*.pem
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# os / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
