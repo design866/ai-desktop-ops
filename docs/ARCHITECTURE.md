@@ -153,6 +153,19 @@ Access-Control-Allow-Headers: Content-Type
 
 ---
 
+## 10. 外部命令一律按字节读，自己解码
+
+`tasklist` / `netstat` 在中文 Windows 上输出是 GBK。用 `subprocess(..., text=True)`
+按 UTF-8 解会抛 `UnicodeDecodeError`，而且异常发生在读取线程里 —— 主线程拿到的
+`stdout` 直接是 `None`，调用方一 `.splitlines()` 就崩，连接被掐断、前端只看到一个
+失败请求。所以统一走 `run_text()`：`stdout=PIPE` 收字节，再按
+`utf-8 → mbcs → latin-1` 依次尝试解码，全都失败就带替换字符解。
+
+配套：`do_POST` 里 `try/except` 兜成 `500 {"ok": false}`。一个条目的异常不该让
+整个服务表现成"死了"。
+
+---
+
 ## 未做（有意）
 
 - **不做应用市场/远程清单**：清单来自本地文件，不 fetch 任何远端 —— 少一个攻击面

@@ -127,6 +127,30 @@ def by_id(app_id):
 
 # ── 探活 ─────────────────────────────────────────────────────────────────
 
+def run_text(cmd, timeout=15):
+    """跑一条外部命令，返回解码后的文本；失败返回空串。
+
+    不能直接用 subprocess 的 text=True：中文 Windows 上 netstat / tasklist
+    输出是 GBK，按 UTF-8 解会抛 UnicodeDecodeError，读取线程挂掉后 stdout
+    变成 None，调用方一 splitlines 就崩（这是真踩过的坑，别改回去）。
+    """
+    kwargs = {}
+    if os.name == "nt":
+        kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        raw = subprocess.run(cmd, stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL, timeout=timeout,
+                             **kwargs).stdout or b""
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    for enc in ("utf-8", "mbcs", "latin-1"):
+        try:
+            return raw.decode(enc)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return raw.decode("latin-1", "replace")
+
+
 def probe(port, timeout=0.45):
     """端口有没有人在听。IPv4 和 IPv6 都要试：Vite 一类常只绑 [::1]。"""
     if not port:
@@ -149,26 +173,18 @@ def running_exes():
         if now - _EXE_CACHE["ts"] < _EXE_TTL:
             return _EXE_CACHE["set"]
     names = set()
-    try:
-        if os.name == "nt":
-            out = subprocess.run(
-                ["tasklist", "/FO", "CSV", "/NH"],
-                capture_output=True, text=True, timeout=15,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            ).stdout
-            for line in out.splitlines():
-                head = line.split('","')[0].strip('" \r')
-                if head.lower().endswith(".exe"):
-                    names.add(head.lower())
-        else:
-            out = subprocess.run(["ps", "-eo", "comm="],
-                                 capture_output=True, text=True, timeout=15).stdout
-            for line in out.splitlines():
-                base = os.path.basename(line.strip()).lower()
-                if base:
-                    names.add(base)
-    except (OSError, subprocess.SubprocessError):
-        pass
+    if os.name == "nt":
+        out = run_text(["tasklist", "/FO", "CSV", "/NH"])
+        for line in out.splitlines():
+            head = line.split('","')[0].strip('" \r')
+            if head.lower().endswith(".exe"):
+                names.add(head.lower())
+    else:
+        out = run_text(["ps", "-eo", "comm="])
+        for line in out.splitlines():
+            base = os.path.basename(line.strip()).lower()
+            if base:
+                names.add(base)
     with _LOCK:
         _EXE_CACHE.update({"ts": now, "set": names})
     return names
@@ -269,32 +285,28 @@ def launch(app):
 
 
 def port_pid(port):
+    """谁在监听这个端口。先找 LISTEN 行，找不到再退一步认端口匹配。"""
     if not port:
         return None
+    needle = ":%s" % port
     if os.name == "nt":
-        try:
-            out = subprocess.run(["netstat", "-ano"], capture_output=True, text=True,
-                                 timeout=15,
-                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
-        except (OSError, subprocess.SubprocessError):
-            return None
-        needle = ":%s" % port
+        out = run_text(["netstat", "-ano"])
+        fallback = None
         for line in out.splitlines():
             parts = line.split()
-            if len(parts) < 5 or "LISTEN" not in line.upper():
+            if len(parts) < 4 or not parts[1].endswith(needle):
                 continue
-            if parts[1].endswith(needle):
-                if parts[-1].isdigit():
-                    return int(parts[-1])
-    elif shutil.which("lsof"):
-        try:
-            out = subprocess.run(["lsof", "-ti", "tcp:%s" % port, "-sTCP:LISTEN"],
-                                 capture_output=True, text=True, timeout=10).stdout
-            for line in out.splitlines():
-                if line.strip().isdigit():
-                    return int(line.strip())
-        except (OSError, subprocess.SubprocessError):
-            return None
+            if not parts[-1].isdigit():
+                continue
+            if "LISTEN" in line.upper():
+                return int(parts[-1])
+            fallback = fallback or int(parts[-1])
+        return fallback
+    if shutil.which("lsof"):
+        for line in run_text(["lsof", "-ti", "tcp:%s" % port, "-sTCP:LISTEN"],
+                             timeout=10).splitlines():
+            if line.strip().isdigit():
+                return int(line.strip())
     return None
 
 
@@ -389,7 +401,11 @@ class Handler(BaseHTTPRequestHandler):
         app = by_id(app_id)
         if not app:
             return self._send(404, json.dumps({"ok": False, "msg": "未知条目"}, ensure_ascii=False))
-        res = launch(app) if action == "start" else stop(app)
+        try:
+            res = launch(app) if action == "start" else stop(app)
+        except Exception as exc:                       # 别让一个条目把连接掐死
+            res = {"ok": False, "msg": "服务端异常: %s" % exc}
+            return self._send(500, json.dumps(res, ensure_ascii=False))
         self._send(200, json.dumps(res, ensure_ascii=False))
 
 
