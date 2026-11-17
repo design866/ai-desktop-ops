@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""App Dock Hub —— 本地 AI 应用注册表 / 启动器 / 探活服务（零依赖，仅标准库）
+"""AI Desktop Ops Hub —— 本地 AI 应用注册表 / 启动器 / 探活服务（零依赖，仅标准库）
 
 它只干三件事：
   1. 列出你登记过的本地应用（web 服务 + 独立窗口程序）；
@@ -335,7 +335,7 @@ def read_page():
         with open(PAGE_FILE, encoding="utf-8") as f:
             return f.read()
     except OSError:
-        return ("<!doctype html><meta charset=utf-8><title>App Dock</title>"
+        return ("<!doctype html><meta charset=utf-8><title>AI Desktop Ops</title>"
                 "<p style=\"font:14px system-ui;padding:20px\">找不到 index.html，"
                 "但 API 可用：<a href=\"/api/state\">/api/state</a>")
 
@@ -433,7 +433,7 @@ def main():
     host = os.environ.get("WB_HOST", "127.0.0.1")
     srv = ThreadingHTTPServer((host, port), Handler)
     srv.daemon_threads = True
-    print("App Dock Hub on http://%s:%d  (%d 条)" % (host, port, len(load_apps())), flush=True)
+    print("AI Desktop Ops Hub on http://%s:%d  (%d 条)" % (host, port, len(load_apps())), flush=True)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

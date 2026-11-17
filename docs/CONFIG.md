@@ -142,7 +142,7 @@ Content-Security-Policy: frame-ancestors 'none'
 2. **本地反代剥头**：起一个极小的反代去掉 `X-Frame-Options`，清单里 `url` 指反代端口。
 3. **不嵌**：`kind` 保持 `web`，但把 `sub` 写成「浏览器打开」，用户点条目时用外部浏览器。
 
-App Dock 本身不替你改对方响应头 —— 那属于越权。
+AI Desktop Ops 本身不替你改对方响应头 —— 那属于越权。
 
 ---
 

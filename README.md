@@ -1,11 +1,11 @@
-# App Dock
+# AI Desktop Ops
 
-**把本机 AI 应用清单，固定成桌面应用侧边栏里的常驻工作台。**
+**中文名：AI 桌面运维台 —— 把本机 AI 软件应用清单，固定成桌面应用侧边栏里的常驻工作台。**
 
 你在本机装了一堆 AI 工具 —— 出图服务、Agent 控制台、向量库前端、本地 IDE、标注工具、生成器 UI。
 它们各自跑在自己的端口上，每次用都要翻书签、记端口、开终端 `npm run dev`。
 
-App Dock 把这堆东西收成侧边栏里的**一列条目**：
+AI Desktop Ops 把这堆东西收成侧边栏里的**一列条目**：
 
 - 绿点 = 在跑，灰点 = 没跑
 - 点一下 → 没跑的先拉起，起好自动嵌进右侧舞台
@@ -40,8 +40,8 @@ App Dock 把这堆东西收成侧边栏里的**一列条目**：
 ## 30 秒跑起来（Windows，只用标准库）
 
 ```powershell
-git clone <this-repo> app-dock
-cd app-dock\hub
+git clone <this-repo> ai-desktop-ops
+cd ai-desktop-ops\hub
 copy apps.example.json apps.json
 python hub.py
 ```
@@ -63,7 +63,7 @@ python hub.py
 宿主只要支持「加载本地 JS 插件 + 声明一个侧栏面板」，就能装。以 **Hermes Agent** 为例：
 
 ```
-%LOCALAPPDATA%\hermes\desktop-plugins\app-dock\plugin.js   ← 把 plugin/plugin.js 放这里
+%LOCALAPPDATA%\hermes\desktop-plugins\ai-desktop-ops\plugin.js   ← 把 plugin/plugin.js 放这里
 ```
 
 重启宿主 → 右侧出现「工作台」面板。面板默认 252px 宽，可以拖宽，拖动后内嵌的应用也跟着变宽。
@@ -182,7 +182,7 @@ Hub 就 6 个端点，方便你自己接：
 ## 目录
 
 ```
-app-dock/
+ai-desktop-ops/
 ├─ hub/
 │  ├─ hub.py              # 服务端：清单 / 探活 / 启动 / JSON + 页面
 │  ├─ index.html          # 独立可用的完整工作台页面

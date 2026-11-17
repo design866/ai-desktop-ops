@@ -1,6 +1,6 @@
-# App Dock - Windows installer
+# AI Desktop Ops - Windows installer
 #
-#   .\install.ps1                 copy hub\ + examples\ to %LOCALAPPDATA%\AppDock, create hub\apps.json, check python
+#   .\install.ps1                 copy hub\ + examples\ to %LOCALAPPDATA%\AIDesktopOps, create hub\apps.json, check python
 #   .\install.ps1 -Autostart      also register hub at logon (HKCU\...\Run, no admin needed)
 #   .\install.ps1 -Uninstall      remove the autostart entry (files are kept)
 #
@@ -16,12 +16,12 @@
 param(
     [switch]$Autostart,
     [switch]$Uninstall,
-    [string]$Target = "$env:LOCALAPPDATA\AppDock"
+    [string]$Target = "$env:LOCALAPPDATA\AIDesktopOps"
 )
 
 $ErrorActionPreference = 'Stop'
 $RunKey  = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-$RunName = 'AppDock'
+$RunName = 'AIDesktopOps'
 
 function Remove-Autostart {
     if (Get-ItemProperty -Path $RunKey -Name $RunName -ErrorAction SilentlyContinue) {
@@ -33,14 +33,14 @@ function Remove-Autostart {
 }
 
 if ($Uninstall) {
-    Write-Host "App Dock - remove autostart"
+    Write-Host "AI Desktop Ops - remove autostart"
     Remove-Autostart
     Write-Host "Files left in place: $Target"
     return
 }
 
 # --- 1. python -------------------------------------------------------------
-Write-Host "App Dock - installer"
+Write-Host "AI Desktop Ops - installer"
 $py = $null
 foreach ($cand in @('python', 'py')) {
     try {

@@ -1,6 +1,6 @@
 # 架构：为什么切成这样
 
-一个做"应用启动器"的东西，最省事的写法是把 spawn 直接塞进界面里。App Dock 没有。
+一个做"应用启动器"的东西，最省事的写法是把 spawn 直接塞进界面里。AI Desktop Ops 没有。
 下面每条取舍都对应一个具体的坑。
 
 ```
@@ -62,7 +62,7 @@
   一旦剥掉，guest 就是 opaque origin：
   - `localStorage` / `indexedDB` 直接抛 `SecurityError`
   - Vite/React 的 SPA 在 bootstrap 阶段就崩 → 白屏
-- 这是"安全默认值"和"能用"之间的真实冲突。App Dock 的选择是：
+- 这是"安全默认值"和"能用"之间的真实冲突。AI Desktop Ops 的选择是：
   **只在 iframe 里放你自己本机跑的服务**，用"来源可控"换"能跑"。
 
 **代价**：guest 与宿主同源信任级别。所以 `README` 里明确写了：别把外网站填进清单。
@@ -119,7 +119,7 @@
 **为什么不是打日志到控制台**：宿主渲染进程的 `console.log` 通常不进日志文件，
 只有 `console.error`/异常会。所以：
 
-- 插件 `register()` 时 `console.error('[app-dock] loaded <ISO>')` —— 证明"插件被加载"
+- 插件 `register()` 时 `console.error('[ai-desktop-ops] loaded <ISO>')` —— 证明"插件被加载"
 - 插件拿到数据后 `fetch(.../api/ping?pane=1&n=<N>)` —— 证明"面板渲染了 **且** 成功跨源取到了数据"
 
 这两条区分了三种坏状态：插件没加载 / 加载了但面板没渲染 / 渲染了但拿不到数据。

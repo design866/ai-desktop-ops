@@ -1,4 +1,4 @@
-/* App Dock —— 把「本地 AI 应用清单」固定成桌面应用的侧边栏工作台
+/* AI Desktop Ops —— 把「本地 AI 应用清单」固定成桌面应用的侧边栏工作台
  *
  * 职责切分（关键）：
  *   hub（../hub/hub.py）负责  启动进程 / 端口探活 / 暴露 JSON 状态
@@ -12,8 +12,8 @@
 import { jsx, jsxs } from 'react/jsx-runtime'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-const PLUGIN_ID = 'app-dock'
-const PANE_ID = 'app-dock'
+const PLUGIN_ID = 'ai-desktop-ops'
+const PANE_ID = 'ai-desktop-ops'
 const SCOPED_ID = PLUGIN_ID + ':' + PANE_ID      // pane 的门牌号：<pluginId>:<paneId>
 const HUB = 'http://127.0.0.1:7777'              // ← 改成你的 hub 地址（hub.py 默认 7777）
 const POLL_MS = 5000
@@ -311,10 +311,10 @@ function Dock(props) {
 
 export default {
   id: PLUGIN_ID,
-  name: 'App Dock',
+  name: 'AI Desktop Ops',
   register(ctx) {
     // 这一行走 renderer 日志（只有 console.error 会进 desktop.log），用来证明插件被加载
-    try { console.error('[app-dock] loaded ' + new Date().toISOString()) } catch (e) {}
+    try { console.error('[ai-desktop-ops] loaded ' + new Date().toISOString()) } catch (e) {}
     ping()   // 只证明 register 被调用过；带 &pane=1&n=… 的那次才证明面板渲染
 
     ctx.register({

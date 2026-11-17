@@ -28,15 +28,15 @@ python hub.py
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-脚本做四件事：把 `hub\`（含 `examples\`、`plugin\`）按仓库原样复制到 `%LOCALAPPDATA%\AppDock\`、
+脚本做四件事：把 `hub\`（含 `examples\`、`plugin\`）按仓库原样复制到 `%LOCALAPPDATA%\AIDesktopOps\`、
 在 `hub\apps.json` 生成清单、检查 Python、打印下一步。
 
 安装后目录结构与仓库一致 —— 这是有意的：清单里的 `{HERE}` 指 hub 目录，示例条目用
-`{HERE}\..\examples\site`，把 `hub.py` 拍平到 `%LOCALAPPDATA%\AppDock\` 根下会让示例条目
+`{HERE}\..\examples\site`，把 `hub.py` 拍平到 `%LOCALAPPDATA%\AIDesktopOps\` 根下会让示例条目
 起不来（`WinError 267`）。
 
 ```powershell
-cd "$env:LOCALAPPDATA\AppDock\hub"
+cd "$env:LOCALAPPDATA\AIDesktopOps\hub"
 python hub.py
 ```
 
@@ -63,7 +63,7 @@ python hub.py
 | 方式 | 命令 | 说明 |
 |---|---|---|
 | 登录自启（推荐） | `.\install.ps1 -Autostart` | 用户级 `HKCU\…\Run`，免管理员，不动系统 |
-| 手动后台 | `Start-Process pythonw -ArgumentList "$env:LOCALAPPDATA\AppDock\hub\hub.py" -WindowStyle Hidden` | 用 `pythonw` 才没有黑窗 |
+| 手动后台 | `Start-Process pythonw -ArgumentList "$env:LOCALAPPDATA\AIDesktopOps\hub\hub.py" -WindowStyle Hidden` | 用 `pythonw` 才没有黑窗 |
 | 托盘常驻 | 自己套 NSSM / WinSW | 需要装第三方，按需 |
 
 ---
@@ -73,11 +73,11 @@ python hub.py
 ### Hermes Agent
 
 ```
-%LOCALAPPDATA%\hermes\desktop-plugins\app-dock\plugin.js
+%LOCALAPPDATA%\hermes\desktop-plugins\ai-desktop-ops\plugin.js
 ```
 
 ```powershell
-$dst = "$env:LOCALAPPDATA\hermes\desktop-plugins\app-dock"
+$dst = "$env:LOCALAPPDATA\hermes\desktop-plugins\ai-desktop-ops"
 New-Item -ItemType Directory -Force -Path $dst | Out-Null
 Copy-Item .\plugin\plugin.js $dst\plugin.js
 ```
@@ -87,7 +87,7 @@ Copy-Item .\plugin\plugin.js $dst\plugin.js
 - 面板默认 `252px`，可拖宽
 - 改 `plugin.js` 里的 `const HUB = 'http://127.0.0.1:7777'` 对齐你的 hub 端口
 - 验证加载：宿主日志（`%LOCALAPPDATA%\hermes\logs\desktop.log`）里应出现
-  `[app-dock] loaded <ISO 时间>`
+  `[ai-desktop-ops] loaded <ISO 时间>`
 
 ### 其它 Electron 宿主：适配清单
 
@@ -140,7 +140,7 @@ sleep 3; curl.exe -s http://127.0.0.1:7777/api/state   # 该条 alive: true
 
 # 4. 面板真的渲染过（装了插件才有这行）
 type hub\logs\plugin-alive.txt
-# 15:19:21 src=app-dock&pane=1&n=5
+# 15:19:21 src=ai-desktop-ops&pane=1&n=5
 ```
 
 第 4 步只有 `src=…` 而没有 `pane=1&n=…`，说明插件加载了但面板没渲染成 ——
@@ -150,10 +150,10 @@ type hub\logs\plugin-alive.txt
 
 ## 卸载
 
-1. 删插件目录：`%LOCALAPPDATA%\hermes\desktop-plugins\app-dock\`
+1. 删插件目录：`%LOCALAPPDATA%\hermes\desktop-plugins\ai-desktop-ops\`
 2. `.\install.ps1 -Uninstall` 清自启项
 3. 结束 hub：`Get-NetTCPConnection -LocalPort 7777 | % { Stop-Process -Id $_.OwningProcess -Force }`
-4. 删 `%LOCALAPPDATA%\AppDock\`
+4. 删 `%LOCALAPPDATA%\AIDesktopOps\`
 
 > 结束 hub 时**不要**用 `taskkill /T`：它会连带杀掉 hub 拉起的 web 服务。
 > 只结束监听 7777 的那个 PID。

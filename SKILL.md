@@ -1,9 +1,9 @@
 ---
-name: app-dock
+name: ai-desktop-ops
 description: Use when 把本机 AI 应用（有端口的 web 服务 / 独立窗口程序）收成桌面应用侧边栏的常驻工作台。
 ---
 
-# App Dock — AI 应用的侧边栏工作台
+# AI Desktop Ops — AI 应用的侧边栏工作台
 
 把本地一堆 AI 工具（出图服务、Agent 控制台、向量库前端、本地 IDE、标注工具）
 收成侧边栏里的一列条目：绿点=在跑、点一下=拉起并内嵌、快捷键直接跳、常驻不可折叠。
@@ -63,7 +63,7 @@ curl.exe -s http://127.0.0.1:7777/api/state
 
 ### 3. 装插件到宿主侧栏
 
-把 `plugin/plugin.js` 放到宿主的插件目录（Hermes：`%LOCALAPPDATA%\hermes\desktop-plugins\app-dock\plugin.js`），
+把 `plugin/plugin.js` 放到宿主的插件目录（Hermes：`%LOCALAPPDATA%\hermes\desktop-plugins\ai-desktop-ops\plugin.js`），
 重启宿主。改文件前先备份：`cp plugin.js backup/plugin-$(date +%H%M%S).js`。
 
 注意：某些宿主的插件目录**拒绝直接写入**（受保护），先写到临时目录再 `cp` 过去。
