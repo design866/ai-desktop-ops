@@ -140,11 +140,14 @@ host.os.openExternal(url)       // 可选：浏览器打开
 | `{HOME}` | 用户主目录 |
 | `{APPDATA}` | `…\Roaming` |
 | `{LOCALAPPDATA}` | `…\Local` |
+| `{PROGRAMFILES}` | `C:\Program Files` |
+| `{PROGRAMFILES_X86}` | `C:\Program Files (x86)` |
+| `{PROGRAMDATA}` | `C:\ProgramData` |
 | `{PY}` | 当前 Python 解释器 |
 | `{id}` `{name}` `{port}` `{url}` `{exe}` | 该条目自己的字段 |
 
 ```json
-"exe": "{LOCALAPPDATA}\\Programs\\Some Editor\\Some Editor.exe"
+"exe": "{PROGRAMFILES}\\Some Editor\\Some Editor.exe"
 ```
 
 字段全表、常见写法（Vite/Next/uvicorn/JupyterLab/Electron 应用）见 [`docs/CONFIG.md`](docs/CONFIG.md)。

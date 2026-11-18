@@ -22,7 +22,7 @@ description: Use when 把本机 AI 应用（有端口的 web 服务 / 独立窗�
    插件只做「读状态 / 渲染 / 内嵌」，启动一律 `POST /api/start/<id>`。
 2. **内嵌用裸 `<iframe>`，不要用沙箱 iframe 组件。** 沙箱会剥掉 `allow-same-origin`，
    guest 变 opaque origin，Vite/React 类 SPA 一读 `localStorage` 就 `SecurityError` 白屏。
-3. **清单里绝不写本机绝对路径。** 用 `{HERE}/{HOME}/{APPDATA}/{LOCALAPPDATA}/{PY}` 占位，
+3. **清单里绝不写本机绝对路径。** 用 `{HERE}/{HOME}/{APPDATA}/{LOCALAPPDATA}/{PROGRAMFILES}/{PROGRAMFILES_X86}/{PROGRAMDATA}/{PY}` 占位，
    换机器只改运行时环境，不改清单。
 
 ## 规则：只要装了、能开独立窗口的 AI 应用，就该出现在侧栏
@@ -52,7 +52,7 @@ Electron 客户端、桌面 Agent、模型管理器），它就应该在侧栏�
 - **不登记这三类**：①系统壳窗口（`ApplicationFrameHost`/`TextInputHost`/开始菜单）；
   ②控制台宿主（`WindowsTerminal`/`conhost`）——窗口是真的但不是「应用」；
   ③宿主自己（`Hermes.exe` 一类），侧栏里放一个「打开宿主」的按钮没有意义。
-  前两类脚本默认已滤掉，需要时 `--all` / `--keep-console`。
+  三类脚本默认都已滤掉，需要时 `--all` / `--keep-console`。
 
 一键拿候选清单（本仓库自带，只依赖标准库 + Win32）：
 

@@ -46,6 +46,9 @@ Hub 读的是 `hub/apps.json`（可用环境变量 `WB_APPS` 指到别处）。*
 | `{HOME}` | 用户主目录 | `{HOME}/projects/foo` |
 | `{APPDATA}` | `%APPDATA%`（Roaming） | 少数应用把配置放这儿 |
 | `{LOCALAPPDATA}` | `%LOCALAPPDATA%`（Local） | `{LOCALAPPDATA}\Programs\X\X.exe` |
+| `{PROGRAMFILES}` | `%PROGRAMFILES%` | `{PROGRAMFILES}\Some Editor\Some Editor.exe` |
+| `{PROGRAMFILES_X86}` | `%PROGRAMFILES(X86)%` | 32 位程序多半装这儿 |
+| `{PROGRAMDATA}` | `%PROGRAMDATA%` | 极少数应用的共享数据 |
 | `{PY}` | 当前 Python 解释器绝对路径 | `{PY} -m http.server {port}` |
 | `{id}` `{name}` `{port}` `{url}` `{exe}` | 该条目自己的字段 | 日志文件名、窗口标题 |
 
@@ -121,7 +124,7 @@ Hub 读的是 `hub/apps.json`（可用环境变量 `WB_APPS` 指到别处）。*
 别扫开始菜单、别扫 `Program Files` —— **装着 ≠ 能开**。让程序开着窗口，然后：
 
 ```powershell
-python tools/list-windows-apps.py --json    # 输出可直接粘的条目，路径已换成 {LOCALAPPDATA}/{HOME} 占位
+python tools/list-windows-apps.py --json    # 输出可直接粘的条目，路径已换成 {HOME}/{LOCALAPPDATA}/{PROGRAMFILES}… 占位
 ```
 
 原理：`EnumWindows` 拿到可见顶层窗口 → `GetWindowThreadProcessId` → `QueryFullProcessImageNameW`

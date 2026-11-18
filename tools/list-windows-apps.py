@@ -39,6 +39,9 @@ SKIP = {
 # 控制台宿主：窗口是真的，但作者们九成不想把它当「应用」登记
 CONSOLE = {"windowsterminal.exe", "conhost.exe", "cmd.exe", "powershell.exe", "pwsh.exe", "wt.exe"}
 
+# 宿主自己：侧栏里放一个「打开宿主」的按钮没有意义（`--all` 可见）
+HOST = {"hermes.exe"}
+
 
 def exe_path(pid):
     """pid -> 完整 exe 路径；权限不足时返回 None（受保护进程常见）。"""
@@ -104,14 +107,35 @@ def fallback_names():
 
 
 def placeholder(path):
-    """把本机绝对路径换成占位变量，清单才能跨机器用。"""
+    """把本机绝对路径换成占位变量，清单才能跨机器用。
+
+    长根先替换：`Program Files (x86)` 是 `Program Files` 的前缀超集，顺序反了会拼出坏路径。
+    """
     home = os.path.expanduser("~")
-    lap = os.environ.get("LOCALAPPDATA", "")
-    app = os.environ.get("APPDATA", "")
-    for root, tok in ((lap, "{LOCALAPPDATA}"), (app, "{APPDATA}"), (home, "{HOME}")):
-        if root and path.lower().startswith(root.lower()):
+    roots = [
+        (os.environ.get("ProgramFiles(x86)", ""), "{PROGRAMFILES_X86}"),
+        (os.environ.get("PROGRAMFILES", ""), "{PROGRAMFILES}"),
+        (os.environ.get("LOCALAPPDATA", ""), "{LOCALAPPDATA}"),
+        (os.environ.get("APPDATA", ""), "{APPDATA}"),
+        (os.environ.get("PROGRAMDATA", ""), "{PROGRAMDATA}"),
+        (home, "{HOME}"),
+    ]
+    low = path.lower()
+    for root, tok in roots:
+        if root and low.startswith(root.lower()):
             return tok + path[len(root):]
     return path
+
+
+def _keep(base, args):
+    """一条窗口记录该不该留下——两条输出路径共用，避免表格和 JSON 说不一致的话。"""
+    if not args.all and base in SKIP:
+        return False
+    if not args.keep_console and base in CONSOLE:
+        return False
+    if not args.all and base in HOST:
+        return False
+    return True
 
 
 def main():
@@ -127,9 +151,7 @@ def main():
     for r in rows:
         path = exe_path(r["pid"]) or ""
         base = os.path.basename(path).lower() if path else names.get(r["pid"], "?").lower()
-        if not args.all and base in SKIP:
-            continue
-        if not args.keep_console and base in CONSOLE:
+        if not _keep(base, args):
             continue
         key = path.lower() if path else base
         if key in seen:
@@ -160,9 +182,7 @@ def main():
     for r in rows:
         path = exe_path(r["pid"]) or ""
         base = os.path.basename(path).lower() if path else names.get(r["pid"], "?").lower()
-        if not args.all and base in SKIP:
-            continue
-        if not args.keep_console and base in CONSOLE:
+        if not _keep(base, args):
             continue
         print("%-26s %-7s %s" % (base, r["pid"], r["title"][:58]))
     print("\n要登记进侧栏，跑：python tools/list-windows-apps.py --json")
