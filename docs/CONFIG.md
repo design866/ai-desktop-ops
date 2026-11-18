@@ -25,8 +25,8 @@ Hub 读的是 `hub/apps.json`（可用环境变量 `WB_APPS` 指到别处）。*
 | `cwd` | string | web 推荐 | hub 目录 | 启动工作目录 |
 | `cmd` | string | web 必填 | — | 启动命令，支持占位变量，用 `shell` 执行 |
 | `exe` | string | native 必填 | — | 可执行文件路径，支持占位变量 |
-| `args` | string[] | | `[]` | native 的启动参数 |
-| `hotkey` | string | | — | 单字符 `1`–`9` / `a`–`z`，大小写不敏感 |
+| `args` | string[] | | — | **当前实现不读**（`os.startfile` 只认 exe）。要用参数请把 `exe` 指向一个快捷方式/启动器 |
+| `hotkey` | string | | — | 单字符 `1`–`9` / `a`–`z`，大小写不敏感，只渲染成徽标 |
 | `note` | string | | — | 只给人看，不进 UI |
 
 ### 探活语义（重要）
