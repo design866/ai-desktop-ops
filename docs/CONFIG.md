@@ -111,15 +111,21 @@ Hub 读的是 `hub/apps.json`（可用环境变量 `WB_APPS` 指到别处）。*
 }
 ```
 
-### 需要命令行参数的原生程序
+### 原生程序：目前只支持「直接拉起 exe」
 
-```json
-{
-  "id": "editor", "name": "Some Editor", "kind": "native",
-  "exe": "{LOCALAPPDATA}\\Programs\\SomeEditor\\SomeEditor.exe",
-  "args": ["--workspace", "{HOME}\\work"]
-}
+`os.startfile(exe)` 拉起，**不传命令行参数、不传环境变量**。需要参数的程序（带 `--workspace`
+之类）请先做一个快捷方式 / 批处理，或者自己包一层启动器，`exe` 指那个启动器。
+
+### 怎么找到 `exe` 的真实路径
+
+别扫开始菜单、别扫 `Program Files` —— **装着 ≠ 能开**。让程序开着窗口，然后：
+
+```powershell
+python tools/list-windows-apps.py --json    # 输出可直接粘的条目，路径已换成 {LOCALAPPDATA}/{HOME} 占位
 ```
+
+原理：`EnumWindows` 拿到可见顶层窗口 → `GetWindowThreadProcessId` → `QueryFullProcessImageNameW`
+拿完整 exe 路径。顺带把系统壳窗口（`ApplicationFrameHost` 等）和控制台宿主滤掉。
 
 ---
 
@@ -148,8 +154,10 @@ AI Desktop Ops 本身不替你改对方响应头 —— 那属于越权。
 
 ## 键盘
 
-- `1`–`9`、`a`–`z`（大小写不敏感，取清单里的 `hotkey`）
-- 同一个键别用在两条上：后出现的会覆盖前面的（Hub 不做校验）
+- `hotkey` 是**渲染用的徽标**：`1`–`9`、`a`–`z`（大小写不敏感），显示在条目右侧，方便你按顺序扫。
+- 插件**不注册全局快捷键**——宿主是聊天窗口，抢键会吃掉你正在打的字。要做全局跳转，请在
+  宿主侧或系统侧把你的组合键映射到 `POST /api/start/<id>`（或直接调 `/api/state` 自己渲染）。
+- 同一个键别用在两条上：后出现的会覆盖前面的（Hub 不做校验）。
 
 ---
 

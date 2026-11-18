@@ -25,6 +25,45 @@ description: Use when 把本机 AI 应用（有端口的 web 服务 / 独立窗�
 3. **清单里绝不写本机绝对路径。** 用 `{HERE}/{HOME}/{APPDATA}/{LOCALAPPDATA}/{PY}` 占位，
    换机器只改运行时环境，不改清单。
 
+## 规则：只要装了、能开独立窗口的 AI 应用，就该出现在侧栏
+
+这是这套东西的**验收标准**，不是可选项：用户装了一个能自己开窗口的 AI 软件（本地 IDE、
+Electron 客户端、桌面 Agent、模型管理器），它就应该在侧栏占一行，绿点=在跑、灰点=没开、
+点一下=拉起。不许以「它没有端口」「它不能被 iframe 嵌」为由把它排除在外。
+
+判定只看事实，不看类型：
+
+| 事实 | 结论 |
+|---|---|
+| 有**可见顶层窗口**（`IsWindowVisible` 且标题非空） | 独立窗口应用 → `kind: native`，登记 |
+| 有端口、`curl` 能通、不发 `X-Frame-Options: DENY` | web 服务 → `kind: web`，登记 + 可内嵌 |
+| 只是装在硬盘上、从没起过窗口、找不到 exe | **先不登记**，等它真跑起来再收 |
+
+要点：
+
+- **「装着」不算证据，「此刻有窗口」才算**。枚举窗口 → 反查 pid → 拿 exe 完整路径，
+  这条链证明了两件事：程序真的能跑、它的可执行文件在哪（`exe` 字段要的正是它）。
+- **`kind: native` 只拉起、不内嵌**。点 native 条目 = 已在跑就提示「已在运行」，没跑就
+  `start`；舞台（内嵌区）只留给 web。别为了统一外观把 native 塞进 iframe —— 它没有 URL。
+- **探活靠 exe 名比对**，不靠端口（原生程序不监听端口）。同名多实例（`chrome.exe` 开了十个窗）
+  必然误判成「在跑」，这是可接受的上界；要精确到实例得走窗口句柄，代价大于收益。
+- **占位变量替换绝对路径**：`{LOCALAPPDATA}\Programs\X\X.exe`、`{HOME}\Documents\X\X.exe`，
+  照抄 `tools/list-windows-apps.py --json` 的输出即可，它已经换好了。
+- **不登记这三类**：①系统壳窗口（`ApplicationFrameHost`/`TextInputHost`/开始菜单）；
+  ②控制台宿主（`WindowsTerminal`/`conhost`）——窗口是真的但不是「应用」；
+  ③宿主自己（`Hermes.exe` 一类），侧栏里放一个「打开宿主」的按钮没有意义。
+  前两类脚本默认已滤掉，需要时 `--all` / `--keep-console`。
+
+一键拿候选清单（本仓库自带，只依赖标准库 + Win32）：
+
+```powershell
+python tools/list-windows-apps.py            # 表格：exe / pid / 窗口标题
+python tools/list-windows-apps.py --json     # 直接可粘进 apps.json 的 native 条目
+```
+
+拿到片段 → 贴进 `hub/apps.json` → `curl -X POST http://127.0.0.1:7777/api/start/<id>` →
+`/api/state` 里该条 `alive:true`，才算这条真收进来了。
+
 ## 步骤
 
 ### 1. 起 hub
@@ -55,7 +94,10 @@ curl.exe -s http://127.0.0.1:7777/api/state
 
 判定靠**事实**，不靠猜：
 - web：`netstat -ano | findstr :<port>` 有 LISTENING，或 `curl -s -o NUL -w "%{http_code}" URL`
-- native：找到 `.exe` 真实路径（`where` / 开始菜单快捷方式 / `Get-Process | select Path`）
+- native：**有可见窗口** → 反查 exe 真实路径（`python tools/list-windows-apps.py` 一步到位；
+  手工路径是 `where` / 开始菜单快捷方式属性 / `Get-Process | select Path`）
+
+「装了有独立窗口的 AI 应用就进侧栏」这条规则的完整判定与排除项见上节，**别在这里二次发明标准**。
 
 登记前先问自己：**这个应用允许被 iframe 嵌吗？** 有些服务发 `X-Frame-Options: DENY` 或 CSP
 `frame-ancestors`，嵌进去是白屏 —— 这种也登记，但把 `kind` 留 `web` 同时在 `sub` 注明「需浏览器打开」，
@@ -95,12 +137,17 @@ curl.exe -s http://127.0.0.1:7777/api/state
 | 条目全灰 | `cmd` 里的 `{PY}` 展开成了解释器 python 而不是 pythonw；或 `cwd` 不存在 |
 | 点了变成白屏 | 应用发了 `X-Frame-Options`，或用了沙箱 iframe |
 | 起得来但 `alive` 永远 false | 端口填错，或服务绑在 `0.0.0.0`/别的 host 而探的是 `127.0.0.1` |
+| native 条目一直灰、点了报「程序文件不存在」 | `exe` 里写了本机绝对路径但没被占位变量替换；或占位拼错（`{LOCALAPPDATA}` 是 `…\Local`，不是 `…\Local\Programs`） |
+| native 明明没开却显示绿点 | 探活比的是 exe 名，同名的别的实例在跑（浏览器类常见），属已知上界 |
 | 重启 hub 后 web 服务全灭 | hub 的子进程跟着死了，重新 start 一遍 |
 | 自己的 Python 包被劫持 | 先 `unset PYTHONPATH` 再跑 hub（别的工具常注入 PYTHONPATH） |
 
 ## 交付前自检
 
 - [ ] `apps.json` 里没有绝对路径、没有真实用户名
+- [ ] **装了且能自己开窗口的 AI 应用都进了侧栏**（用 `tools/list-windows-apps.py` 对一遍，
+      缺的要么补上，要么能说清为什么它是系统壳/终端/宿主自己）
+- [ ] 一条 native 条目至少实测过「灰 → 点一下 → 绿」和「关掉 → 变灰」两个方向
 - [ ] 没有凭据/密钥进仓库（`.env`、`logs/` 在 `.gitignore`）
 - [ ] hub 只监听 `127.0.0.1`
 - [ ] `/api/health` 与 `/api/start` 都实测过，不是推测
