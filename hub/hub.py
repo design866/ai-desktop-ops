@@ -272,14 +272,21 @@ def launch(app):
     env.pop("PYTHONPATH", None)           # 防止外层注入的同名包劫持子进程导入
     env.update({k: str(v) for k, v in (app.get("env") or {}).items()})
     flags = 0
+    si = None
     if os.name == "nt":
-        flags = getattr(subprocess, "DETACHED_PROCESS", 0x8) | \
+        # CREATE_NO_WINDOW 而不是 DETACHED_PROCESS：detach 之后 node/next
+        # 自己再申请控制台时，Win11 会把默认终端拉到任务栏，用户看到黑窗。
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) | \
                 getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x200)
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = 0  # SW_HIDE
     try:
         # stdin 必须留条路：某些交互式 dev server 读到 EOF 就退出
         subprocess.Popen(cmd, cwd=cwd, env=env, shell=True,
                          stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, creationflags=flags)
+                         stderr=subprocess.DEVNULL, creationflags=flags,
+                         startupinfo=si)
     except OSError as exc:
         return {"ok": False, "msg": "启动失败: %s" % exc}
     with _LOCK:
